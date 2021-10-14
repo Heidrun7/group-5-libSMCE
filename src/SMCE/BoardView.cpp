@@ -123,19 +123,21 @@ VirtualPin VirtualPins::operator[](std::size_t pin_id) noexcept {
     // clang-format on
 }
 
+[[nodiscard]] auto VirtualUartBuffer::get_chan() noexcept {
+    auto& chan = m_bdat->uart_channels[m_index];
+    switch (m_dir) {
+    case Direction::rx:
+        return std::tie(chan.rx, chan.rx_mut, chan.max_buffered_rx);
+    case Direction::tx:
+        return std::tie(chan.tx, chan.tx_mut,chan.max_buffered_tx);
+    }
+    unreachable();
+}
+
 [[nodiscard]] std::size_t VirtualUartBuffer::size() noexcept {
     if (!exists())
         return 0;
-    auto& chan = m_bdat->uart_channels[m_index];
-    auto [d, mut] = [&] {
-        switch (m_dir) {
-        case Direction::rx:
-            return std::tie(chan.rx, chan.rx_mut);
-        case Direction::tx:
-            return std::tie(chan.tx, chan.tx_mut);
-        }
-        unreachable();
-    }();
+    auto [d, mut, max_buffered] = get_chan();
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
     const auto ret = d.size();
@@ -146,16 +148,7 @@ VirtualPin VirtualPins::operator[](std::size_t pin_id) noexcept {
 std::size_t VirtualUartBuffer::read(std::span<char> buf) noexcept {
     if (!exists())
         return 0;
-    auto& chan = m_bdat->uart_channels[m_index];
-    auto [d, mut, max_buffered] = [&] {
-        switch (m_dir) {
-        case Direction::rx:
-            return std::tie(chan.rx, chan.rx_mut, chan.max_buffered_rx);
-        case Direction::tx:
-            return std::tie(chan.tx, chan.tx_mut, chan.max_buffered_tx);
-        }
-        unreachable();
-    }();
+    auto [d, mut, max_buffered] = get_chan();
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
     const std::size_t count = std::min(d.size(), buf.size());
@@ -168,16 +161,7 @@ std::size_t VirtualUartBuffer::read(std::span<char> buf) noexcept {
 std::size_t VirtualUartBuffer::write(std::span<const char> buf) noexcept {
     if (!exists())
         return 0;
-    auto& chan = m_bdat->uart_channels[m_index];
-    auto [d, mut, max_buffered] = [&] {
-        switch (m_dir) {
-        case Direction::rx:
-            return std::tie(chan.rx, chan.rx_mut, chan.max_buffered_rx);
-        case Direction::tx:
-            return std::tie(chan.tx, chan.tx_mut, chan.max_buffered_tx);
-        }
-        unreachable();
-    }();
+    auto [d, mut, max_buffered] = get_chan();
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
     const std::size_t count = std::min(
@@ -190,16 +174,7 @@ std::size_t VirtualUartBuffer::write(std::span<const char> buf) noexcept {
 [[nodiscard]] char VirtualUartBuffer::front() noexcept {
     if (!exists())
         return '\0';
-    auto& chan = m_bdat->uart_channels[m_index];
-    auto [d, mut] = [&] {
-        switch (m_dir) {
-        case Direction::rx:
-            return std::tie(chan.rx, chan.rx_mut);
-        case Direction::tx:
-            return std::tie(chan.tx, chan.tx_mut);
-        }
-        unreachable();
-    }();
+    auto [d, mut, max_buffered] = get_chan();
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
     if (d.empty())
@@ -208,6 +183,7 @@ std::size_t VirtualUartBuffer::write(std::span<const char> buf) noexcept {
     mut.unlock();
     return ret;
 }
+
 
 [[nodiscard]] bool VirtualUart::exists() noexcept { return m_bdat && m_index < m_bdat->uart_channels.size(); }
 
