@@ -37,6 +37,8 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE_FALSE(br.suspend());
     //Can not attach sketch if suspended.
     REQUIRE_FALSE(br.attach_sketch(sk));
+    //If the board is suspended - not possible to reset.
+    REQUIRE_FALSE(br.reset());
     REQUIRE(br.view().valid());
     REQUIRE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
