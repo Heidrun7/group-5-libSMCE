@@ -44,6 +44,8 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE(br.status() == smce::Board::Status::running);
     //Can not attach sketch if already running.
     REQUIRE_FALSE(br.attach_sketch(sk));
+    //Can not configure if board is not clean and not already configured
+    REQUIRE_FALSE(br.configure({}));
     REQUIRE(br.view().valid());
     REQUIRE(br.stop());
     REQUIRE(br.status() == smce::Board::Status::stopped);
