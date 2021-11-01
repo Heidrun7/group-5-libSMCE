@@ -33,9 +33,11 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE(br.view().valid());
     REQUIRE(br.suspend());
     REQUIRE(br.status() == smce::Board::Status::suspended);
+    REQUIRE_FALSE(br.attach_sketch(sk));
     REQUIRE(br.view().valid());
     REQUIRE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
+    REQUIRE_FALSE(br.attach_sketch(sk));
     REQUIRE(br.view().valid());
     REQUIRE(br.stop());
     REQUIRE(br.status() == smce::Board::Status::stopped);
