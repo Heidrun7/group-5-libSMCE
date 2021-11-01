@@ -13,14 +13,19 @@ using namespace std::literals;
 
 TEST_CASE("Board contracts", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
+    smce::Board br{};
     REQUIRE(!tc.check_suitable_environment());
+    //Should not be able to start if the sketch is not attached yet.
+    REQUIRE_FALSE(br.start());
     smce::Sketch sk{SKETCHES_PATH "noop", {.fqbn = "arduino:avr:nano"}};
     const auto ec = tc.compile(sk);
     if (ec)
         std::cerr << tc.build_log().second;
     REQUIRE_FALSE(ec);
+    //Not able to start if the sketch is not compiled.
+    REQUIRE_FALSE(br.start());
     REQUIRE(sk.is_compiled());
-    smce::Board br{};
+    //smce::Board br{};
     REQUIRE(br.status() == smce::Board::Status::clean);
     REQUIRE_FALSE(br.view().valid());
     REQUIRE(br.configure({}));
@@ -29,7 +34,10 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE(br.attach_sketch(sk));
     REQUIRE_FALSE(br.view().valid());
     REQUIRE(br.start());
+    REQUIRE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
+    //Should not be able to start if it is already configured and is not stopped already.
+    REQUIRE_FALSE(br.start());
     REQUIRE(br.view().valid());
     REQUIRE(br.suspend());
     REQUIRE(br.status() == smce::Board::Status::suspended);
@@ -41,6 +49,8 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE_FALSE(br.reset());
     REQUIRE(br.view().valid());
     REQUIRE(br.resume());
+    //Can not resume when it has already been resumed.
+    REQUIRE_FALSE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
     //Can not attach sketch if already running.
     REQUIRE_FALSE(br.attach_sketch(sk));
