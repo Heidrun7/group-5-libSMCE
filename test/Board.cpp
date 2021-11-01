@@ -33,10 +33,14 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE(br.view().valid());
     REQUIRE(br.suspend());
     REQUIRE(br.status() == smce::Board::Status::suspended);
+    //Can not suspend if it is already suspended
+    REQUIRE_FALSE(br.suspend());
+    //Can not attach sketch if suspended.
     REQUIRE_FALSE(br.attach_sketch(sk));
     REQUIRE(br.view().valid());
     REQUIRE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
+    //Can not attach sketch if already running.
     REQUIRE_FALSE(br.attach_sketch(sk));
     REQUIRE(br.view().valid());
     REQUIRE(br.stop());
