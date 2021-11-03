@@ -107,8 +107,10 @@ TEST_CASE("Board start", "[Board]")
     //Should not be able to configure after the board has started.
     REQUIRE_FALSE(br.configure({}));
 
-    // If board is already running, it can not be started.
+    //If board is already running, it can not be started.
     REQUIRE_FALSE(br.start());
+    //If the board is already running, it can not be resumed.
+    REQUIRE_FALSE(br.resume());
 }
 
 TEST_CASE("Board suspend", "[Board]"){
@@ -134,8 +136,9 @@ TEST_CASE("Board suspend", "[Board]"){
     REQUIRE_FALSE(br.suspend());
     //Can not attach sketch if suspended.
     REQUIRE_FALSE(br.attach_sketch(sk));
-    //If the board is suspended - not possible to reset.
+    //If the board is suspended, it can not be reset.
     REQUIRE_FALSE(br.reset());
+
 }
 
 TEST_CASE("Board attach_sketch", "[Board]"){
