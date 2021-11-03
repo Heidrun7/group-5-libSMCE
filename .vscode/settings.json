@@ -1,0 +1,19 @@
+{
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "system_error": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "array": "cpp",
+        "regex": "cpp",
+        "bitset": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "variant": "cpp",
+        "string_view": "cpp",
+        "span": "cpp"
+    }
+}
