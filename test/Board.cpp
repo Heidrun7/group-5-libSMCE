@@ -86,3 +86,33 @@ TEST_CASE("Mixed INO/C++ sources", "[Board]") {
     REQUIRE_FALSE(ec);
 }
 
+
+TEST_CASE("Board start", "[Board]")
+{
+    smce::Toolchain tc{SMCE_PATH};
+    REQUIRE(!tc.check_suitable_environment());
+
+    //Initialize sketch
+    smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
+    //Initialize board
+    smce::Board br{};
+
+    //If board has not been configured it can not be started.
+    REQUIRE_FALSE(br.start());
+    REQUIRE(br.configure({}));
+    REQUIRE(br.status() == smce::Board::Status::configured);
+
+    //Configured but no sketch attached = not be able to start.
+    REQUIRE_FALSE(br.start());
+
+    //Should not be able to start with an uncompiled attatched sketch.
+    REQUIRE(br.attach_sketch(sk));
+    REQUIRE_FALSE(br.start());
+    tc.compile(sk);
+    REQUIRE(br.attach_sketch(sk));
+    REQUIRE(br.start());
+
+    // If board is already running, it can not be started.
+    REQUIRE_FALSE(br.start());
+}
+
