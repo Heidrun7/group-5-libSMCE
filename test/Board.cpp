@@ -116,3 +116,20 @@ TEST_CASE("Board start", "[Board]")
     REQUIRE_FALSE(br.start());
 }
 
+TEST_CASE("Board suspend", "[Board]"){
+    smce::Toolchain tc{SMCE_PATH};
+    REQUIRE(!tc.check_suitable_environment());
+
+    //Initialize sketch
+    smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
+    //Initialize board
+    smce::Board br{};
+
+    //Setup to start board
+    REQUIRE(br.configure({}));
+    REQUIRE(br.status() == smce::Board::Status::configured);
+    tc.compile(sk);
+    REQUIRE(br.attach_sketch(sk));
+    REQUIRE(br.start());
+}
+
