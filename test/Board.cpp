@@ -78,93 +78,113 @@ TEST_CASE("Mixed INO/C++ sources", "[Board]") {
     REQUIRE_FALSE(ec);
 }
 
-TEST_CASE("Board start", "[Board]")
-{
+TEST_CASE("Board start", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
     REQUIRE(!tc.check_suitable_environment());
 
-    //Initialize sketch
+    // Initialize sketch
     smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
-    //Initialize board
+    // Initialize board
     smce::Board br{};
 
-    //If board has not been configured it can not be started.
+    // If board has not been configured it can not be started.
     REQUIRE_FALSE(br.start());
     REQUIRE(br.configure({}));
     REQUIRE(br.status() == smce::Board::Status::configured);
 
-
-    //Configured but no sketch attached = not be able to start.
+    // Configured but no sketch attached = not be able to start.
     REQUIRE_FALSE(br.start());
 
-    //Should not be able to start with an uncompiled attatched sketch.
+    // Should not be able to start with an uncompiled attatched sketch.
     REQUIRE(br.attach_sketch(sk));
     REQUIRE_FALSE(br.start());
     tc.compile(sk);
     REQUIRE(br.attach_sketch(sk));
     REQUIRE(br.start());
 
-    //Should not be able to configure after the board has started.
+    // Should not be able to configure after the board has started.
     REQUIRE_FALSE(br.configure({}));
 
-    //If board is already running, it can not be started.
+    // If board is already running, it can not be started.
     REQUIRE_FALSE(br.start());
-    //If the board is already running, it can not be resumed.
+    // If the board is already running, it can not be resumed.
     REQUIRE_FALSE(br.resume());
 }
 
-TEST_CASE("Board suspend", "[Board]"){
+TEST_CASE("Board suspend", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
     REQUIRE(!tc.check_suitable_environment());
 
-    //Initialize sketch
+    // Initialize sketch
     smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
-    //Initialize board
+    // Initialize board
     smce::Board br{};
 
-    //Setup to start board
+    // Setup to start board
     REQUIRE(br.configure({}));
     REQUIRE(br.status() == smce::Board::Status::configured);
     tc.compile(sk);
     REQUIRE(br.attach_sketch(sk));
     REQUIRE(br.start());
 
-    //Able to suspend if running
+    // Able to suspend if running
     REQUIRE(br.suspend());
     REQUIRE(br.status() == smce::Board::Status::suspended);
-    //Can not suspend if it is already suspended
+    // Can not suspend if it is already suspended
     REQUIRE_FALSE(br.suspend());
-    //Can not attach sketch if suspended.
+    // Can not attach sketch if suspended.
     REQUIRE_FALSE(br.attach_sketch(sk));
-    //If the board is suspended, it can not be reset.
+    // If the board is suspended, it can not be reset.
     REQUIRE_FALSE(br.reset());
-
 }
 
-TEST_CASE("Board attach_sketch", "[Board]"){
+TEST_CASE("Board terminate", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
     REQUIRE(!tc.check_suitable_environment());
 
-    //Initialize sketch
+    // Initialize sketch
     smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
-    //Initialize board
+    // Initialize board
     smce::Board br{};
 
-    //Setup to start board
+    // Setup to start board
     REQUIRE(br.configure({}));
     REQUIRE(br.status() == smce::Board::Status::configured);
     tc.compile(sk);
     REQUIRE(br.attach_sketch(sk));
     REQUIRE(br.start());
-    //Can not attach sketch if already running.
+
+    // Able to terminate if running
+    REQUIRE(br.terminate());
+    // Can not terminate if already terminated.
+    REQUIRE_FALSE(br.terminate());
+
+    // Able to terminate if suspended.
+    REQUIRE(br.start());
+    REQUIRE(br.suspend());
+    REQUIRE(br.terminate());
+}
+
+TEST_CASE("Board attach_sketch", "[Board]") {
+    smce::Toolchain tc{SMCE_PATH};
+    REQUIRE(!tc.check_suitable_environment());
+
+    // Initialize sketch
+    smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
+    // Initialize board
+    smce::Board br{};
+
+    // Setup to start board
+    REQUIRE(br.configure({}));
+    REQUIRE(br.status() == smce::Board::Status::configured);
+    tc.compile(sk);
+    REQUIRE(br.attach_sketch(sk));
+    REQUIRE(br.start());
+    // Can not attach sketch if already running.
     REQUIRE_FALSE(br.attach_sketch(sk));
 
     REQUIRE(br.suspend());
     REQUIRE(br.status() == smce::Board::Status::suspended);
-    //Can not attach sketch if suspended.
+    // Can not attach sketch if suspended.
     REQUIRE_FALSE(br.attach_sketch(sk));
 }
-
-
-
-
