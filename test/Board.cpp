@@ -131,5 +131,15 @@ TEST_CASE("Board suspend", "[Board]"){
     tc.compile(sk);
     REQUIRE(br.attach_sketch(sk));
     REQUIRE(br.start());
+
+    //Able to suspend if running
+    REQUIRE(br.suspend());
+    REQUIRE(br.status() == smce::Board::Status::suspended);
+    //Can not suspend if it is already suspended
+    REQUIRE_FALSE(br.suspend());
+    //Can not attach sketch if suspended.
+    REQUIRE_FALSE(br.attach_sketch(sk));
+    //If the board is suspended - not possible to reset.
+    REQUIRE_FALSE(br.reset());
 }
 
