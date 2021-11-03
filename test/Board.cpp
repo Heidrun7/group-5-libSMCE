@@ -93,6 +93,7 @@ TEST_CASE("Board start", "[Board]")
     REQUIRE(br.configure({}));
     REQUIRE(br.status() == smce::Board::Status::configured);
 
+
     //Configured but no sketch attached = not be able to start.
     REQUIRE_FALSE(br.start());
 
@@ -102,6 +103,9 @@ TEST_CASE("Board start", "[Board]")
     tc.compile(sk);
     REQUIRE(br.attach_sketch(sk));
     REQUIRE(br.start());
+
+    //Should not be able to configure after the board has started.
+    REQUIRE_FALSE(br.configure({}));
 
     // If board is already running, it can not be started.
     REQUIRE_FALSE(br.start());
