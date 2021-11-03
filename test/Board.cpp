@@ -36,8 +36,6 @@ TEST_CASE("Board contracts", "[Board]") {
     REQUIRE(br.view().valid());
     REQUIRE(br.resume());
     REQUIRE(br.status() == smce::Board::Status::running);
-    //Can not attach sketch if already running.
-    REQUIRE_FALSE(br.attach_sketch(sk));
     REQUIRE(br.view().valid());
     REQUIRE(br.stop());
     REQUIRE(br.status() == smce::Board::Status::stopped);
@@ -79,7 +77,6 @@ TEST_CASE("Mixed INO/C++ sources", "[Board]") {
         std::cerr << tc.build_log().second;
     REQUIRE_FALSE(ec);
 }
-
 
 TEST_CASE("Board start", "[Board]")
 {
@@ -136,4 +133,31 @@ TEST_CASE("Board suspend", "[Board]"){
     //If the board is suspended - not possible to reset.
     REQUIRE_FALSE(br.reset());
 }
+
+TEST_CASE("Board attach_sketch", "[Board]"){
+    smce::Toolchain tc{SMCE_PATH};
+    REQUIRE(!tc.check_suitable_environment());
+
+    //Initialize sketch
+    smce::Sketch sk{SKETCHES_PATH "with_cxx", {.fqbn = "arduino:avr:nano"}};
+    //Initialize board
+    smce::Board br{};
+
+    //Setup to start board
+    REQUIRE(br.configure({}));
+    REQUIRE(br.status() == smce::Board::Status::configured);
+    tc.compile(sk);
+    REQUIRE(br.attach_sketch(sk));
+    REQUIRE(br.start());
+    //Can not attach sketch if already running.
+    REQUIRE_FALSE(br.attach_sketch(sk));
+
+    REQUIRE(br.suspend());
+    REQUIRE(br.status() == smce::Board::Status::suspended);
+    //Can not attach sketch if suspended.
+    REQUIRE_FALSE(br.attach_sketch(sk));
+}
+
+
+
 
