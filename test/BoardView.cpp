@@ -169,6 +169,12 @@ TEST_CASE("BoardView RGB444 cvt", "[BoardView]") {
         std::array<std::byte, std::size(expected_out)> out;
         REQUIRE(fb.read_rgb888(out));
         REQUIRE(out == expected_out);
+        
+        // Get framebuffer width
+        REQUIRE(fb.get_width());
+        REQUIRE(fb.get_height());
+        //
+
     }
 
     {
@@ -188,12 +194,23 @@ TEST_CASE("BoardView RGB444 cvt", "[BoardView]") {
         fb.read_rgb888(out);
         REQUIRE(out == expected_out);
         
-        // Test when expected_out is not correct
-        constexpr std::array unexpected_out = {'\x20'_b, '\x20'_b, '\x20'_b, '\x40'_b, '\x50'_b, '\x60'_b,
+        // When expected_out is not correct
+        constexpr std::array unexpected_out = {'\x20'_b, '\x20'_b, '\x20'_b, '\x40'_b, '\x60'_b,
                                              '\x20'_b, '\x80'_b, '\x90'_b, '\xA0'_b, '\xB0'_b, '\xC0'_b};
         std::array<std::byte, std::size(unexpected_out)> unout;
-        fb.read_rgb888(unout);
-        REQUIRE_FALSE(unout == unexpected_out);
+        REQUIRE_FALSE(fb.read_rgb888(unout));
+        
+        // Test when frame buffer should not exist
+        constexpr std::array in_f = {'\xBC'_b};
+        REQUIRE_FALSE(fb.write_rgb444(in_f));
+        
+        auto fbb = bv.frame_buffers[1];
+        REQUIRE_FALSE(fbb.exists());
+        REQUIRE_FALSE(fbb.needs_horizontal_flip());
+        REQUIRE_FALSE(fbb.needs_vertical_flip());
+        REQUIRE_FALSE(fbb.get_width());
+        REQUIRE_FALSE(fbb.read_rgb888(unout));
+        REQUIRE_FALSE(fb.read_rgb444(unout));
         //
     }
 
