@@ -16,6 +16,8 @@
  *
  */
 #include <filesystem>
+#include <iostream>
+#include <fstream>
 #include <catch2/catch_test_macros.hpp>
 #include "SMCE/Toolchain.hpp"
 #include "defs.hpp"
@@ -26,6 +28,40 @@ TEST_CASE("Toolchain invalid", "[Toolchain]") {
     smce::Toolchain tc{path};
     REQUIRE(tc.check_suitable_environment());
     REQUIRE(tc.resource_dir() == path);
+
+    //Test when configure fails.
+    smce::Sketch sk{path,{.fqbn = "null"}};
+    auto ec = tc.compile(sk);
+    REQUIRE(ec == smce::toolchain_error::configure_failed);
+
+    //Test when sketch fails due to no source.
+    smce::Sketch skTwo{"" ,{.fqbn = "arduino:avr:nano"}};
+    ec = tc.compile(skTwo);
+    REQUIRE(ec == smce::toolchain_error::sketch_invalid);
+
+    //Test when sketch fails due to that configuration .fqbn is empty.
+    smce::Sketch skThree{path ,{.fqbn = ""}};
+    ec = tc.compile(skThree);
+    REQUIRE(ec == smce::toolchain_error::sketch_invalid);
+
+    //Test when resource directory is absent due to empty.
+    smce::Toolchain tcTwo{""};
+    REQUIRE(tcTwo.check_suitable_environment() == smce::toolchain_error::resdir_absent);
+
+    //Test when resource directory is empty.
+    const auto newPath = SMCE_TEST_DIR "/empty_dir/empty";
+    std::filesystem::create_directory(newPath);
+    smce::Toolchain tcThree{SMCE_TEST_DIR "/empty_dir/empty"};
+    REQUIRE(tcThree.check_suitable_environment() == smce::toolchain_error::resdir_empty);
+
+    //Test when resource directory is pointing to a file.
+    const auto textPath = SMCE_TEST_DIR "/empty_dir/testfile.txt";
+    std::ofstream ofs(textPath);
+    ofs << "Test file for toolchain\n";
+    ofs.close();
+    smce::Toolchain tcFour{SMCE_TEST_DIR "/empty_dir/testfile.txt"};
+    REQUIRE(tcFour.check_suitable_environment() == smce::toolchain_error::resdir_file);
+
 }
 
 TEST_CASE("Toolchain valid", "[Toolchain]") {
