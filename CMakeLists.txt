@@ -17,6 +17,9 @@
 
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0022 NEW)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
+  cmake_policy (SET CMP0112 NEW)
+endif ()
 
 project (libSMCE VERSION 1.4.0.5)
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake/Modules")
@@ -137,9 +140,11 @@ target_link_libraries (objSMCE PUBLIC ipcSMCE HostUDD)
 target_sources (objSMCE PRIVATE
     include/SMCE/internal/utils.hpp
     include/SMCE/internal/portable/ostream_joiner.hpp
+    include/SMCE/internal/portable/scope.hpp
     include/SMCE/SMCE_iface.h
     include/SMCE/SMCE_fs.hpp
     include/SMCE/BoardConf.hpp
+    src/SMCE/BoardConf.cpp
     include/SMCE/Board.hpp
     src/SMCE/Board.cpp
     include/SMCE/Toolchain.hpp
@@ -222,7 +227,15 @@ smce_install_config ()
 file (REMOVE_RECURSE "${PROJECT_BINARY_DIR}/packaging")
 file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/packaging/include")
 file (COPY "${PROJECT_SOURCE_DIR}/include/SMCE" DESTINATION "${PROJECT_BINARY_DIR}/packaging/include")
-file (REMOVE_RECURSE "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal")
+file (REMOVE_RECURSE
+    "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal/portable"
+    "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal/BoardData.hpp"
+    "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal/BoardDeviceView.hpp"
+    "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal/SharedBoardData.hpp"
+    "${PROJECT_BINARY_DIR}/packaging/include/SMCE/internal/utils.hpp"
+)
+file (COPY "${PROJECT_SOURCE_DIR}/include/SMCE_rt" DESTINATION "${PROJECT_BINARY_DIR}/packaging/include")
+file (REMOVE "${PROJECT_BINARY_DIR}/packaging/include/SMCE_rt/internal/sketch_rt.hpp")
 install (DIRECTORY "${PROJECT_BINARY_DIR}/packaging/include" DESTINATION "." ${SMCE_COMPONENT_HEADERS})
 
 install (FILES

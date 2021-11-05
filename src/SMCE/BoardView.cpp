@@ -30,6 +30,8 @@ using microsec_clock = boost::date_time::microsec_clock<boost::posix_time::ptime
 
 namespace smce {
 
+[[nodiscard]] bool BoardView::stop_requested() noexcept { return m_bdat && m_bdat->stop_requested.load(); }
+
 [[nodiscard]] std::string_view BoardView::storage_get_root(Link link, std::uint16_t accessor) noexcept {
     if (!m_bdat)
         return {};
@@ -137,50 +139,58 @@ VirtualPin VirtualPins::operator[](std::size_t pin_id) noexcept {
 [[nodiscard]] std::size_t VirtualUartBuffer::size() noexcept {
     if (!exists())
         return 0;
+
     auto [d, mut, max_buffered] = get_chan();
+
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
+    std::lock_guard lg{mut, std::adopt_lock};
     const auto ret = d.size();
-    mut.unlock();
     return ret;
 }
 
 std::size_t VirtualUartBuffer::read(std::span<char> buf) noexcept {
     if (!exists())
         return 0;
+
     auto [d, mut, max_buffered] = get_chan();
+
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
+    std::lock_guard lg{mut, std::adopt_lock};
     const std::size_t count = std::min(d.size(), buf.size());
     std::copy_n(d.begin(), count, buf.begin());
     d.erase(d.begin(), d.begin() + count);
-    mut.unlock();
     return count;
 }
 
 std::size_t VirtualUartBuffer::write(std::span<const char> buf) noexcept {
     if (!exists())
         return 0;
+
     auto [d, mut, max_buffered] = get_chan();
+
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
+    std::lock_guard lg{mut, std::adopt_lock};
     const std::size_t count = std::min(
         std::clamp(max_buffered - d.size(), std::size_t{0}, static_cast<std::size_t>(max_buffered)), buf.size());
     std::copy_n(buf.begin(), count, std::back_inserter(d));
-    mut.unlock();
     return count;
 }
 
 [[nodiscard]] char VirtualUartBuffer::front() noexcept {
     if (!exists())
         return '\0';
+
     auto [d, mut, max_buffered] = get_chan();
+
     if (!mut.timed_lock(microsec_clock::universal_time() + boost::posix_time::seconds{1}))
         return 0;
+    std::lock_guard lg{mut, std::adopt_lock};
     if (d.empty())
         return '\0';
     const char ret = d.front();
-    mut.unlock();
     return ret;
 }
 
