@@ -39,6 +39,7 @@ class SMCE_API Board {
     enum class Status {
         clean,
         configured,
+        prepared,
         running,
         suspended,
         stopped
@@ -73,11 +74,12 @@ class SMCE_API Board {
 
     bool reset() noexcept;
     bool configure(BoardConfig bconf) noexcept;
+    bool prepare() noexcept;
     bool start() noexcept;
     bool suspend() noexcept;
     bool resume() noexcept;
     bool terminate() noexcept;
-    bool stop() noexcept;
+    bool stop(std::chrono::milliseconds timeout = std::chrono::milliseconds{1000}) noexcept;
 
     [[nodiscard]] inline LockedLog runtime_log() noexcept {
         return {std::unique_lock{m_runtime_log_mtx}, m_runtime_log};
@@ -85,7 +87,6 @@ class SMCE_API Board {
 
   private:
     struct Internal;
-    enum class Command;
 
     void do_spawn() noexcept;
     void do_sweep() noexcept;

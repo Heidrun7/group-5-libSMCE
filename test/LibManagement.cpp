@@ -78,7 +78,9 @@ TEST_CASE("Invalid manifests processing", "[Plugin]") {
     const auto plugin_root = base_dir / "plugin_root";
     std::filesystem::create_directory(base_dir / "manifests");
 
-    std::filesystem::copy(MANIFESTS_PATH + manifest + ".cmake", base_dir / "manifests");
+    std::error_code cp_ec;
+    std::filesystem::copy(MANIFESTS_PATH + manifest + ".cmake", base_dir / "manifests" / (manifest + ".cmake"), cp_ec);
+
     const auto res = bp::system(bp::shell, bp::start_dir(base_dir.generic_string()),
 #if !BOOST_OS_WINDOWS
                                 bp::env["CMAKE_GENERATOR"] = generator,
@@ -151,7 +153,7 @@ TEST_CASE("Valid manifests processing", "[Plugin]") {
             loader << "project (Test)\n";
             loader << "add_library (Ardrivo INTERFACE)\n";
             loader << "add_executable (Sketch empty.cxx)\n";
-            loader << "include (" << module_path << ")\n";
+            loader << "include (\"" << module_path << "\")\n";
             loader << cmake_require_target("smce_plugin_ESP32_AnalogWrite");
         }
 
