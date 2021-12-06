@@ -78,6 +78,7 @@ TEST_CASE("Mixed INO/C++ sources", "[Board]") {
     REQUIRE_FALSE(ec);
 }
 
+#ifdef SMCE_TEST_JUNIPER
 TEST_CASE("Juniper sources", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
     REQUIRE(!tc.check_suitable_environment());
@@ -98,6 +99,7 @@ TEST_CASE("Juniper sources", "[Board]") {
     test_pin_delayable(pin13d, true, 5000, 1ms);
     REQUIRE(br.stop());
 }
+#endif
 
 TEST_CASE("Board start", "[Board]") {
     smce::Toolchain tc{SMCE_PATH};
@@ -180,10 +182,6 @@ TEST_CASE("Board terminate", "[Board]") {
     // Can not terminate if already terminated.
     REQUIRE_FALSE(br.terminate());
 
-    // Able to terminate if suspended.
-    REQUIRE(br.start());
-    REQUIRE(br.suspend());
-    REQUIRE(br.terminate());
 }
 
 TEST_CASE("Board attach_sketch", "[Board]") {
